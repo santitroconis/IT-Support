@@ -27,6 +27,29 @@
   align-items: center;
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.leave-button {
+  background-color: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--bg-tertiary);
+  padding: 4px 12px;
+  border-radius: var(--border-radius-md);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.leave-button:hover {
+  background-color: var(--bg-tertiary);
+  color: var(--error-color);
+  border-color: var(--error-color);
+}
+
 .header-info h2 {
   font-size: 1.25rem;
   font-weight: 600;
