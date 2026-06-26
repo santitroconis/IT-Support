@@ -140,6 +140,100 @@ app.post('/api/assets/assign', async (c) => {
   return c.json({ success: true, message: 'Asignación completada' });
 });
 
+// --- ÉPICA 3: TICKETS Y CONSUMIBLES ---
+
+// Crear un Ticket (Usuario)
+app.post('/api/tickets', async (c) => {
+  const payload = await getUserFromHeader(c);
+  if (!payload) return c.json({ error: 'No autorizado' }, 401);
+  
+  const body = await c.req.json();
+  // Validaciones estrictas: no texto libre para tipo y categoría
+  if (!body.type || !body.category) return c.json({ error: 'Faltan campos estructurados' }, 400);
+
+  const id = 'tkt_' + Math.random().toString(36).substring(7);
+  
+  await c.env.DB.prepare(
+    `INSERT INTO tickets (id, user_id, type, category, description, status) 
+     VALUES (?, ?, ?, ?, ?, 'open')`
+  ).bind(id, payload.userId, body.type, body.category, body.description || '').run();
+  
+  return c.json({ success: true, ticketId: id });
+});
+
+// Listar Tickets (Depende del Rol)
+app.get('/api/tickets', async (c) => {
+  const payload = await getUserFromHeader(c);
+  if (!payload) return c.json({ error: 'No autorizado' }, 401);
+  
+  let query = 'SELECT * FROM tickets ORDER BY created_at DESC';
+  let bindings: any[] = [];
+  
+  // Si es un usuario normal, solo ve sus propios tickets
+  if (payload.role === 'user') {
+    query = 'SELECT * FROM tickets WHERE user_id = ? ORDER BY created_at DESC';
+    bindings.push(payload.userId);
+  }
+  
+  const { results } = await c.env.DB.prepare(query).bind(...bindings).all();
+  return c.json(results);
+});
+
+// Resolver Ticket y Auto-Descontar Consumible
+app.post('/api/tickets/:id/resolve', async (c) => {
+  const payload = await getUserFromHeader(c);
+  if (!payload || payload.role === 'user') return c.json({ error: 'Prohibido' }, 403);
+  
+  const ticketId = c.req.param('id');
+  const body = await c.req.json();
+  const { resolution_notes, consumable_id } = body;
+
+  try {
+    // 1. Cerrar el ticket
+    await c.env.DB.prepare(
+      `UPDATE tickets SET status = 'resolved', resolution_notes = ?, resolved_at = CURRENT_TIMESTAMP, assigned_tech_id = ? WHERE id = ?`
+    ).bind(resolution_notes || '', payload.userId, ticketId).run();
+
+    // 2. Lógica Módulo II: Auto-descuento de Stock Transaccional si se usó un consumible
+    if (consumable_id) {
+      // Registrar en log transaccional
+      const txId = 'tx_' + Math.random().toString(36).substring(7);
+      await c.env.DB.prepare(
+        `INSERT INTO inventory_transactions (id, consumable_id, tech_id, ticket_id, quantity, destination_location) 
+         VALUES (?, ?, ?, ?, -1, 'local')`
+      ).bind(txId, consumable_id, payload.userId, ticketId).run();
+
+      // Descontar del central
+      await c.env.DB.prepare(
+        `UPDATE assets_consumables SET stock_central = stock_central - 1 WHERE id = ?`
+      ).bind(consumable_id).run();
+    }
+
+    return c.json({ success: true, message: 'Ticket resuelto y stock auditado' });
+  } catch (e: any) {
+    return c.json({ error: 'Error al resolver ticket: ' + e.message }, 500);
+  }
+});
+
+// --- ÉPICA 4: DASHBOARD GERENCIAL ---
+
+app.get('/api/metrics/dashboard', async (c) => {
+  const payload = await getUserFromHeader(c);
+  if (!payload || payload.role !== 'manager') return c.json({ error: 'Prohibido' }, 403);
+  
+  // Extraer métricas de SLA y Tickets
+  const { results: ticketStats } = await c.env.DB.prepare(
+    `SELECT status, COUNT(*) as count FROM tickets GROUP BY status`
+  ).all();
+
+  // Extraer alertas de stock de consumibles (Módulo II)
+  const { results: stockAlerts } = await c.env.DB.prepare(
+    `SELECT name, stock_central FROM assets_consumables WHERE stock_central < 5`
+  ).all();
+
+  return c.json({ ticketStats, stockAlerts });
+});
+
 // Endpoint para conectar al WebSocket de una sala
 app.get('/api/room/:roomId/ws', async (c) => {
   const roomId = c.req.param('roomId');
