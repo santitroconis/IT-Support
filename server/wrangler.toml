@@ -6,7 +6,7 @@ compatibility_date = "2024-04-05"
 [[d1_databases]]
 binding = "DB"
 database_name = "chat_db"
-database_id = "00000000-0000-0000-0000-000000000000"
+database_id = "cb1b852e-f451-4190-ac81-58b7e2926a25"
 
 # Binding for Durable Objects
 [[durable_objects.bindings]]
@@ -16,4 +16,9 @@ class_name = "ChatRoom"
 # Migrations for Durable Objects
 [[migrations]]
 tag = "v1"
-new_classes = ["ChatRoom"]
+new_sqlite_classes = ["ChatRoom"]
+
+# Binding for R2 Object Storage (Documents / Actas)
+[[r2_buckets]]
+binding = "DOCUMENTS_BUCKET"
+bucket_name = "serex-docs-prod"

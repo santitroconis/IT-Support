@@ -18,7 +18,7 @@ export const useWebSocket = (roomId: string, token: string | null) => {
   const connect = useCallback(() => {
     if (!token) return;
 
-    const wsUrl = `ws://localhost:8787/api/room/${roomId}/ws?token=${token}`;
+    const wsUrl = `wss://chat-server.santitroconis.workers.dev/api/room/${roomId}/ws?token=${token}`;
     const ws = new WebSocket(wsUrl);
 
     ws.onopen = () => {
