@@ -215,6 +215,57 @@ app.post('/api/tickets/:id/resolve', async (c) => {
   }
 });
 
+// --- ÉPICA 6: PANELES DE GESTIÓN ADMINISTRATIVA ---
+
+// Obtener todos los usuarios (Solo Tech/Manager)
+app.get('/api/users', async (c) => {
+  const payload = await getUserFromHeader(c);
+  if (!payload || payload.role === 'user') return c.json({ error: 'Prohibido' }, 403);
+  
+  const { results } = await c.env.DB.prepare(
+    'SELECT id, email, role, full_name, department, office_location FROM users'
+  ).all();
+  return c.json(results);
+});
+
+// Crear un nuevo usuario (Solo Manager)
+app.post('/api/users', async (c) => {
+  const payload = await getUserFromHeader(c);
+  if (!payload || payload.role !== 'manager') return c.json({ error: 'Prohibido' }, 403);
+  
+  const body = await c.req.json();
+  const id = 'user_' + Math.random().toString(36).substring(7);
+  
+  try {
+    await c.env.DB.prepare(
+      `INSERT INTO users (id, email, password_hash, role, full_name, department, office_location) 
+       VALUES (?, ?, ?, ?, ?, ?, ?)`
+    ).bind(
+      id, 
+      body.email, 
+      'fake_hash', // En prod sería bcrypt.hash(body.password)
+      body.role || 'user',
+      body.full_name || 'Nuevo Empleado',
+      body.department || 'General',
+      body.office_location || 'Sede Central'
+    ).run();
+    return c.json({ success: true, id });
+  } catch (e: any) {
+    if (e.message.includes('UNIQUE')) return c.json({ error: 'Email ya registrado' }, 400);
+    return c.json({ error: 'Error interno' }, 500);
+  }
+});
+
+// Obtener inventario global (Solo Tech/Manager)
+app.get('/api/assets/all', async (c) => {
+  const payload = await getUserFromHeader(c);
+  if (!payload || payload.role === 'user') return c.json({ error: 'Prohibido' }, 403);
+  
+  const { results } = await c.env.DB.prepare('SELECT * FROM assets_hardware ORDER BY created_at DESC').all();
+  return c.json(results);
+});
+
+
 // --- ÉPICA 4: DASHBOARD GERENCIAL ---
 
 app.get('/api/metrics/dashboard', async (c) => {
