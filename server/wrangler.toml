@@ -1,0 +1,19 @@
+name = "chat-server"
+main = "src/index.ts"
+compatibility_date = "2024-04-05"
+
+# Binding for D1 Database
+[[d1_databases]]
+binding = "DB"
+database_name = "chat_db"
+database_id = "00000000-0000-0000-0000-000000000000"
+
+# Binding for Durable Objects
+[[durable_objects.bindings]]
+name = "CHAT_ROOM"
+class_name = "ChatRoom"
+
+# Migrations for Durable Objects
+[[migrations]]
+tag = "v1"
+new_classes = ["ChatRoom"]

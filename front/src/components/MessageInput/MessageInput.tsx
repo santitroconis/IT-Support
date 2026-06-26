@@ -1,0 +1,47 @@
+import React, { useState, type KeyboardEvent } from 'react';
+import './MessageInput.css';
+
+interface MessageInputProps {
+  onSendMessage: (message: string) => void;
+  disabled?: boolean;
+}
+
+export const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, disabled }) => {
+  const [text, setText] = useState('');
+
+  const handleSend = () => {
+    if (text.trim() && !disabled) {
+      onSendMessage(text.trim());
+      setText('');
+    }
+  };
+
+  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleSend();
+    }
+  };
+
+  return (
+    <div className="message-input-container">
+      <input
+        type="text"
+        className="message-input"
+        placeholder="Escribe un mensaje..."
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        onKeyDown={handleKeyDown}
+        disabled={disabled}
+      />
+      <button 
+        className="send-button" 
+        onClick={handleSend}
+        disabled={!text.trim() || disabled}
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+          <path d="M3.478 2.404a.75.75 0 0 0-.926.941l2.432 7.905H13.5a.75.75 0 0 1 0 1.5H4.984l-2.432 7.905a.75.75 0 0 0 .926.94 60.519 60.519 0 0 0 18.445-8.986.75.75 0 0 0 0-1.218A60.517 60.517 0 0 0 3.478 2.404Z" />
+        </svg>
+      </button>
+    </div>
+  );
+};
