@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { LogOut, BarChart3, AlertTriangle, CheckCircle2, CircleDashed } from 'lucide-react';
 
 interface TicketStat {
   status: string;
@@ -41,52 +42,101 @@ export const ManagerDashboard: React.FC = () => {
     navigate('/');
   };
 
+  const getStatusIcon = (status: string) => {
+    if (status === 'resolved') return <CheckCircle2 className="text-success" size={20} />;
+    if (status === 'open') return <CircleDashed className="text-destructive animate-spin-slow" size={20} />;
+    return <CircleDashed className="text-muted-foreground" size={20} />;
+  };
+
   return (
-    <div style={{ padding: '2rem', color: 'var(--text-primary)' }} className="animate-fade-in">
-      <h1>Dashboard Gerencial S.C.I.</h1>
-      <p>Métricas de tiempos de respuesta, resolución y stock crítico en tiempo real.</p>
+    <div className="min-h-screen bg-background flex flex-col relative overflow-hidden animate-fade-in">
       
-      <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap', marginTop: '2rem' }}>
+      {/* Navbar */}
+      <header className="sticky top-0 z-10 bg-card border-b border-border px-6 py-4 flex justify-between items-center shadow-sm">
+        <div className="flex items-center gap-3">
+          <div className="bg-primary/20 p-2 rounded-lg text-primary">
+            <BarChart3 size={24} />
+          </div>
+          <div>
+            <h1 className="text-xl font-bold text-foreground leading-tight">Dashboard Gerencial</h1>
+            <p className="text-xs text-muted-foreground">Métricas S.C.I.</p>
+          </div>
+        </div>
+        <button 
+          onClick={handleLogout}
+          className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-destructive hover:bg-destructive/10 rounded-md transition-colors"
+        >
+          <LogOut size={16} />
+          Cerrar Sesión
+        </button>
+      </header>
+
+      {/* Main Content */}
+      <main className="flex-1 p-6 max-w-7xl mx-auto w-full grid grid-cols-1 md:grid-cols-2 gap-6">
         
-        {/* Panel de Tickets */}
-        <div style={{ flex: 1, minWidth: '300px', padding: '1.5rem', backgroundColor: 'var(--bg-secondary)', borderRadius: '8px', border: '1px solid var(--bg-tertiary)' }}>
-          <h3>Estadísticas de Tickets (SLA)</h3>
+        {/* Panel SLA */}
+        <section className="bg-card border border-border rounded-xl p-6 shadow-sm">
+          <div className="flex items-center gap-2 mb-6 border-b border-border pb-4">
+            <BarChart3 className="text-primary" size={20} />
+            <h2 className="text-lg font-semibold text-foreground">Estadísticas de Tickets (SLA)</h2>
+          </div>
+
           {ticketStats.length === 0 ? (
-            <p style={{ color: 'var(--text-secondary)' }}>Sin datos suficientes.</p>
+            <p className="text-sm text-muted-foreground text-center py-8">No hay datos suficientes para mostrar métricas.</p>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem' }}>
+            <div className="grid grid-cols-1 gap-4">
               {ticketStats.map(stat => (
-                <div key={stat.status} style={{ display: 'flex', justifyContent: 'space-between', padding: '1rem', backgroundColor: 'var(--bg-primary)', borderRadius: '4px' }}>
-                  <span style={{ textTransform: 'capitalize' }}>{stat.status === 'open' ? '🔴 Abiertos' : stat.status === 'resolved' ? '🟢 Resueltos' : stat.status}</span>
-                  <strong>{stat.count}</strong>
+                <div key={stat.status} className="flex items-center justify-between p-4 bg-background border border-border rounded-lg">
+                  <div className="flex items-center gap-3">
+                    {getStatusIcon(stat.status)}
+                    <span className="font-medium text-foreground capitalize">
+                      {stat.status === 'open' ? 'Tickets Abiertos' : stat.status === 'resolved' ? 'Tickets Resueltos' : stat.status}
+                    </span>
+                  </div>
+                  <span className="text-2xl font-bold text-foreground">{stat.count}</span>
                 </div>
               ))}
             </div>
           )}
-        </div>
+        </section>
 
-        {/* Panel de Stock */}
-        <div style={{ flex: 1, minWidth: '300px', padding: '1.5rem', backgroundColor: 'var(--bg-secondary)', borderRadius: '8px', border: '1px solid var(--error-color)' }}>
-          <h3 style={{ color: 'var(--error-color)' }}>Alertas de Stock Crítico</h3>
+        {/* Panel Stock */}
+        <section className="bg-card border border-destructive/50 rounded-xl p-6 shadow-[0_0_15px_rgba(239,68,68,0.1)]">
+          <div className="flex items-center gap-2 mb-6 border-b border-border pb-4">
+            <AlertTriangle className="text-destructive" size={20} />
+            <h2 className="text-lg font-semibold text-destructive">Alertas de Stock Crítico</h2>
+          </div>
+
           {stockAlerts.length === 0 ? (
-            <p style={{ color: 'var(--text-secondary)' }}>No hay consumibles en estado crítico.</p>
+            <div className="flex flex-col items-center justify-center py-8 text-center gap-2">
+              <CheckCircle2 className="text-success opacity-50" size={32} />
+              <p className="text-sm text-muted-foreground">Niveles de inventario estables. No hay alertas.</p>
+            </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem' }}>
+            <div className="grid grid-cols-1 gap-4">
               {stockAlerts.map((alert, idx) => (
-                <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', padding: '1rem', backgroundColor: 'var(--bg-primary)', borderRadius: '4px', borderLeft: '4px solid var(--error-color)' }}>
-                  <span>{alert.name}</span>
-                  <strong style={{ color: 'var(--error-color)' }}>{alert.stock_central} unds.</strong>
+                <div key={idx} className="flex items-center justify-between p-4 bg-destructive/10 border border-destructive/30 rounded-lg">
+                  <div className="flex flex-col">
+                    <span className="font-semibold text-foreground">{alert.name}</span>
+                    <span className="text-xs text-muted-foreground">Reposición requerida inmediatamente</span>
+                  </div>
+                  <div className="flex flex-col items-end">
+                    <span className="text-xl font-bold text-destructive">{alert.stock_central}</span>
+                    <span className="text-xs text-destructive/80">unidades restantes</span>
+                  </div>
                 </div>
               ))}
             </div>
           )}
-        </div>
+        </section>
 
-      </div>
+      </main>
 
-      <button onClick={handleLogout} style={{ marginTop: '3rem', background: 'transparent', color: 'var(--error-color)', border: 'none', cursor: 'pointer' }}>
-        Cerrar Sesión
-      </button>
+      <style>{`
+        .animate-spin-slow {
+          animation: spin 3s linear infinite;
+        }
+      `}</style>
     </div>
   );
 };

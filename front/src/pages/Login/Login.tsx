@@ -1,25 +1,25 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './Login.css';
+import { ShieldAlert, Laptop } from 'lucide-react';
 
 export const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setIsLoading(true);
     
-    // Validar dominio
     if (!email.endsWith('@gruposerex.com')) {
       setError('Debes usar un correo corporativo válido.');
+      setIsLoading(false);
       return;
     }
 
     try {
-      // Nota: apuntando al localhost para desarrollo. 
-      // En prod debe usar import.meta.env.VITE_API_URL
       const response = await fetch('http://localhost:8787/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -34,40 +34,56 @@ export const Login: React.FC = () => {
       localStorage.setItem('auth_token', data.token);
       localStorage.setItem('user_data', JSON.stringify(data.user));
 
-      // Redirigir según el rol del usuario
       if (data.user.role === 'manager') navigate('/manager');
       else if (data.user.role === 'tech') navigate('/tech');
       else navigate('/user');
 
     } catch (err: any) {
       setError(err.message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="login-container animate-fade-in">
-      <form className="login-card" onSubmit={handleLogin}>
-        <div className="brand-logo">
-          <svg viewBox="0 0 24 24" fill="currentColor" width="48" height="48" color="var(--accent-color)">
-             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14.5v-9l6 4.5-6 4.5z"/>
-          </svg>
+    <div className="flex items-center justify-center min-h-screen bg-background p-4 animate-fade-in">
+      <form 
+        onSubmit={handleLogin}
+        className="w-full max-w-md p-8 bg-card border border-border rounded-xl shadow-2xl flex flex-col items-center text-center gap-6"
+      >
+        <div className="flex items-center justify-center w-20 h-20 rounded-full bg-primary/20 text-primary shadow-[0_0_20px_rgba(59,130,246,0.3)]">
+          <Laptop size={40} />
         </div>
-        <h2>Portal S.C.I.</h2>
-        <p>Sistema Centralizado de Inventario y Soporte TI</p>
         
-        {error && <div className="error-banner">{error}</div>}
+        <div className="space-y-2">
+          <h2 className="text-3xl font-bold tracking-tight text-foreground">Portal S.C.I.</h2>
+          <p className="text-muted-foreground text-sm">Sistema Centralizado de Inventario y Soporte TI</p>
+        </div>
         
-        <input 
-          type="email" 
-          placeholder="tucorreo@gruposerex.com" 
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          className="room-input"
-        />
-        <button type="submit" className="room-join-button" style={{marginTop: '1rem'}}>
-          Ingresar al Portal
-        </button>
+        {error && (
+          <div className="flex items-center gap-2 w-full p-3 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-md">
+            <ShieldAlert size={16} />
+            <span>{error}</span>
+          </div>
+        )}
+        
+        <div className="w-full space-y-4">
+          <input 
+            type="email" 
+            placeholder="tucorreo@gruposerex.com" 
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            className="w-full px-4 py-3 bg-background border border-input rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all placeholder:text-muted-foreground text-center"
+          />
+          <button 
+            type="submit" 
+            disabled={isLoading}
+            className="w-full py-3 px-4 bg-primary text-primary-foreground font-semibold rounded-md hover:bg-primary/90 transition-colors active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none"
+          >
+            {isLoading ? 'Autenticando...' : 'Ingresar al Portal'}
+          </button>
+        </div>
       </form>
     </div>
   );

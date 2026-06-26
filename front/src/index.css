@@ -1,78 +1,45 @@
-:root {
-  /* Semantic Colors - Premium Dark Mode */
-  --bg-primary: #0f172a;
-  --bg-secondary: #1e293b;
-  --bg-tertiary: #334155;
-  --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  --accent-color: #3b82f6;
-  --accent-color-hover: #2563eb;
-  --error-color: #ef4444;
-  --success-color: #10b981;
+@import "tailwindcss";
 
-  /* Spacing */
-  --spacing-xs: 0.25rem;
-  --spacing-sm: 0.5rem;
-  --spacing-md: 1rem;
-  --spacing-lg: 1.5rem;
-  --spacing-xl: 2rem;
+@theme {
+  --color-background: #09090b;
+  --color-foreground: #fafafa;
+  
+  --color-primary: #3b82f6;
+  --color-primary-foreground: #ffffff;
+  
+  --color-card: #121214;
+  --color-card-foreground: #fafafa;
 
-  /* Borders & Shadows */
-  --border-radius-sm: 0.25rem;
-  --border-radius-md: 0.5rem;
-  --border-radius-lg: 1rem;
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --color-border: #27272a;
+  --color-input: #27272a;
+  
+  --color-muted: #27272a;
+  --color-muted-foreground: #a1a1aa;
+  
+  --color-destructive: #ef4444;
+  --color-destructive-foreground: #ffffff;
+  
+  --color-accent: #3b82f6;
+  --color-accent-foreground: #ffffff;
 
-  /* Typography */
-  --font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
+  --color-success: #22c55e;
 }
 
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+@layer base {
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+  }
+  * {
+    border-color: var(--color-border);
+  }
 }
 
-body {
-  font-family: var(--font-family);
-  background-color: var(--bg-primary);
-  color: var(--text-primary);
-  line-height: 1.5;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
+/* Custom Utilities */
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out forwards;
 }
-
-#root {
-  width: 100%;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-::-webkit-scrollbar {
-  width: 6px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: var(--bg-tertiary);
-  border-radius: var(--border-radius-lg);
-}
-::-webkit-scrollbar-thumb:hover {
-  background: var(--text-secondary);
-}
-
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
-}
-
-.animate-fade-in {
-  animation: fadeIn 0.3s ease-out forwards;
 }
